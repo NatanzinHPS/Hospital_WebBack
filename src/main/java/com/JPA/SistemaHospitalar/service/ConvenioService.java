@@ -1,55 +1,67 @@
 package com.JPA.SistemaHospitalar.service;
 
 import com.JPA.SistemaHospitalar.Entity.Convenio;
+import com.JPA.SistemaHospitalar.dto.convenio.ConvenioRequestDTO;
+import com.JPA.SistemaHospitalar.dto.convenio.ConvenioResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.ConvenioMapper;
 import com.JPA.SistemaHospitalar.repository.ConvenioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ConvenioService {
 
-    @Autowired
-    private ConvenioRepository convenioRepository;
+    private final ConvenioRepository convenioRepository;
+    private final ConvenioMapper convenioMapper;
 
-    public Convenio salvar(Convenio convenio) {
-        return convenioRepository.save(convenio);
+    public ConvenioService(ConvenioRepository convenioRepository, ConvenioMapper convenioMapper) {
+        this.convenioRepository = convenioRepository;
+        this.convenioMapper = convenioMapper;
     }
 
-    public Optional<Convenio> obterPorId(Long id) {
-        return convenioRepository.findById(id);
+    public ConvenioResponseDTO salvar(ConvenioRequestDTO dto) {
+        Convenio convenio = convenioMapper.toEntity(dto);
+        return convenioMapper.toResponseDTO(convenioRepository.save(convenio));
     }
 
-    public List<Convenio> obterTodos() {
-        return convenioRepository.findAll();
+    public ConvenioResponseDTO obterPorId(Long id) {
+        return convenioRepository.findById(id)
+                .map(convenioMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + id));
     }
 
-    public Optional<Convenio> obterPorCnpj(String cnpj) {
-        return convenioRepository.findByCnpj(cnpj);
+    public List<ConvenioResponseDTO> obterTodos() {
+        return convenioRepository.findAll().stream()
+                .map(convenioMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Convenio> obterPorNome(String nome) {
-        return convenioRepository.findByNomeContainingIgnoreCase(nome);
+    public ConvenioResponseDTO obterPorCnpj(String cnpj) {
+        return convenioRepository.findByCnpj(cnpj)
+                .map(convenioMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com CNPJ: " + cnpj));
     }
 
-    public Convenio atualizar(Long id, Convenio convenioAtualizado) {
-        return convenioRepository.findById(id).map(convenio -> {
-            convenio.setNome(convenioAtualizado.getNome());
-            convenio.setCnpj(convenioAtualizado.getCnpj());
-            return convenioRepository.save(convenio);
-        }).orElseThrow(() -> new RuntimeException("Convênio não encontrado com id: " + id));
+    public List<ConvenioResponseDTO> obterPorNome(String nome) {
+        return convenioRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(convenioMapper::toResponseDTO)
+                .toList();
+    }
+
+    public ConvenioResponseDTO atualizar(Long id, ConvenioRequestDTO dto) {
+        Convenio convenio = convenioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + id));
+        convenio.setNome(dto.nome());
+        convenio.setCnpj(dto.cnpj());
+        return convenioMapper.toResponseDTO(convenioRepository.save(convenio));
     }
 
     public void deletar(Long id) {
         if (!convenioRepository.existsById(id)) {
-            throw new RuntimeException("Convênio não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Convênio não encontrado com id: " + id);
         }
         convenioRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return convenioRepository.existsById(id);
-    }
 }
-

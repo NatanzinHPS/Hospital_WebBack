@@ -1,56 +1,66 @@
 package com.JPA.SistemaHospitalar.service;
 
+import com.JPA.SistemaHospitalar.Entity.Paciente;
 import com.JPA.SistemaHospitalar.Entity.Prontuario;
+import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioRequestDTO;
+import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.ProntuarioMapper;
+import com.JPA.SistemaHospitalar.repository.PacienteRepository;
 import com.JPA.SistemaHospitalar.repository.ProntuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProntuarioService {
 
-    @Autowired
-    private ProntuarioRepository prontuarioRepository;
+    private final ProntuarioRepository prontuarioRepository;
+    private final PacienteRepository pacienteRepository;
+    private final ProntuarioMapper prontuarioMapper;
 
-    public Prontuario salvar(Prontuario prontuario) {
-        return prontuarioRepository.save(prontuario);
+    public ProntuarioService(ProntuarioRepository prontuarioRepository,
+                              PacienteRepository pacienteRepository,
+                              ProntuarioMapper prontuarioMapper) {
+        this.prontuarioRepository = prontuarioRepository;
+        this.pacienteRepository = pacienteRepository;
+        this.prontuarioMapper = prontuarioMapper;
     }
 
-    public Optional<Prontuario> obterPorId(Long id) {
-        return prontuarioRepository.findById(id);
+    public ProntuarioResponseDTO salvarParaPaciente(Long pacienteId, ProntuarioRequestDTO dto) {
+        Paciente paciente = pacienteRepository.findById(pacienteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + pacienteId));
+        Prontuario prontuario = prontuarioMapper.toEntity(dto);
+        paciente.setProntuario(prontuario);
+        pacienteRepository.save(paciente);
+        return prontuarioMapper.toResponseDTO(prontuario);
     }
 
-    public List<Prontuario> obterTodos() {
-        return prontuarioRepository.findAll();
+    public ProntuarioResponseDTO obterPorId(Long id) {
+        return prontuarioRepository.findById(id)
+                .map(prontuarioMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Prontuário não encontrado com id: " + id));
     }
 
-    public List<Prontuario> obterPorTipoSanguineo(String tipoSanguineo) {
-        return prontuarioRepository.findByTipoSanguineo(tipoSanguineo);
+    public List<ProntuarioResponseDTO> obterTodos() {
+        return prontuarioRepository.findAll().stream()
+                .map(prontuarioMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Prontuario> obterPorAlergia(String alergia) {
-        return prontuarioRepository.findByAlergiaContainingIgnoreCase(alergia);
-    }
-
-    public Prontuario atualizar(Long id, Prontuario prontuarioAtualizado) {
-        return prontuarioRepository.findById(id).map(prontuario -> {
-            prontuario.setTipoSanguineo(prontuarioAtualizado.getTipoSanguineo());
-            prontuario.setAlergia(prontuarioAtualizado.getAlergia());
-            prontuario.setObservacoes(prontuarioAtualizado.getObservacoes());
-            return prontuarioRepository.save(prontuario);
-        }).orElseThrow(() -> new RuntimeException("Prontuário não encontrado com id: " + id));
+    public ProntuarioResponseDTO atualizar(Long id, ProntuarioRequestDTO dto) {
+        Prontuario prontuario = prontuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Prontuário não encontrado com id: " + id));
+        prontuario.setTipoSanguineo(dto.tipoSanguineo());
+        prontuario.setAlergia(dto.alergia());
+        prontuario.setObservacoes(dto.observacoes());
+        return prontuarioMapper.toResponseDTO(prontuarioRepository.save(prontuario));
     }
 
     public void deletar(Long id) {
         if (!prontuarioRepository.existsById(id)) {
-            throw new RuntimeException("Prontuário não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Prontuário não encontrado com id: " + id);
         }
         prontuarioRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return prontuarioRepository.existsById(id);
-    }
 }
-

@@ -1,77 +1,64 @@
 package com.JPA.SistemaHospitalar.controller;
 
-import com.JPA.SistemaHospitalar.Entity.Medico;
+import com.JPA.SistemaHospitalar.dto.medico.MedicoRequestDTO;
+import com.JPA.SistemaHospitalar.dto.medico.MedicoResponseDTO;
 import com.JPA.SistemaHospitalar.service.MedicoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/medicos")
 public class MedicoController {
 
-    @Autowired
-    private MedicoService medicoService;
+    private final MedicoService medicoService;
+
+    public MedicoController(MedicoService medicoService) {
+        this.medicoService = medicoService;
+    }
 
     @PostMapping
-    public ResponseEntity<Medico> criar(@RequestBody Medico medico) {
-        Medico medicoSalvo = medicoService.salvar(medico);
-        return ResponseEntity.status(HttpStatus.CREATED).body(medicoSalvo);
+    public ResponseEntity<MedicoResponseDTO> criar(@Valid @RequestBody MedicoRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(medicoService.salvar(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Medico>> listarTodos() {
-        List<Medico> medicos = medicoService.obterTodos();
-        return ResponseEntity.ok(medicos);
+    public ResponseEntity<List<MedicoResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(medicoService.obterTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Medico> obterPorId(@PathVariable Long id) {
-        Optional<Medico> medico = medicoService.obterPorId(id);
-        return medico.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<MedicoResponseDTO> obterPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(medicoService.obterPorId(id));
     }
 
     @GetMapping("/crm/{crm}")
-    public ResponseEntity<Medico> obterPorCrm(@PathVariable String crm) {
-        Optional<Medico> medico = medicoService.obterPorCrm(crm);
-        return medico.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<MedicoResponseDTO> obterPorCrm(@PathVariable String crm) {
+        return ResponseEntity.ok(medicoService.obterPorCrm(crm));
     }
 
     @GetMapping("/nome")
-    public ResponseEntity<List<Medico>> obterPorNome(@RequestParam String nome) {
-        List<Medico> medicos = medicoService.obterPorNome(nome);
-        return ResponseEntity.ok(medicos);
+    public ResponseEntity<List<MedicoResponseDTO>> obterPorNome(@RequestParam String nome) {
+        return ResponseEntity.ok(medicoService.obterPorNome(nome));
     }
 
     @GetMapping("/especialidade")
-    public ResponseEntity<List<Medico>> obterPorEspecialidade(@RequestParam String especialidade) {
-        List<Medico> medicos = medicoService.obterPorEspecialidade(especialidade);
-        return ResponseEntity.ok(medicos);
+    public ResponseEntity<List<MedicoResponseDTO>> obterPorEspecialidade(@RequestParam String especialidade) {
+        return ResponseEntity.ok(medicoService.obterPorEspecialidade(especialidade));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Medico> atualizar(@PathVariable Long id, @RequestBody Medico medico) {
-        try {
-            Medico medicoAtualizado = medicoService.atualizar(id, medico);
-            return ResponseEntity.ok(medicoAtualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<MedicoResponseDTO> atualizar(@PathVariable Long id,
+                                                        @Valid @RequestBody MedicoRequestDTO dto) {
+        return ResponseEntity.ok(medicoService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        try {
-            medicoService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        medicoService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
-

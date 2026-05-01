@@ -1,71 +1,59 @@
 package com.JPA.SistemaHospitalar.controller;
 
-import com.JPA.SistemaHospitalar.Entity.Paciente;
+import com.JPA.SistemaHospitalar.dto.paciente.PacienteRequestDTO;
+import com.JPA.SistemaHospitalar.dto.paciente.PacienteResponseDTO;
 import com.JPA.SistemaHospitalar.service.PacienteService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/pacientes")
 public class PacienteController {
 
-    @Autowired
-    private PacienteService pacienteService;
+    private final PacienteService pacienteService;
+
+    public PacienteController(PacienteService pacienteService) {
+        this.pacienteService = pacienteService;
+    }
 
     @PostMapping
-    public ResponseEntity<Paciente> criar(@RequestBody Paciente paciente) {
-        Paciente pacienteSalvo = pacienteService.salvar(paciente);
-        return ResponseEntity.status(HttpStatus.CREATED).body(pacienteSalvo);
+    public ResponseEntity<PacienteResponseDTO> criar(@Valid @RequestBody PacienteRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pacienteService.salvar(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Paciente>> listarTodos() {
-        List<Paciente> pacientes = pacienteService.obterTodos();
-        return ResponseEntity.ok(pacientes);
+    public ResponseEntity<List<PacienteResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(pacienteService.obterTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Paciente> obterPorId(@PathVariable Long id) {
-        Optional<Paciente> paciente = pacienteService.obterPorId(id);
-        return paciente.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<PacienteResponseDTO> obterPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(pacienteService.obterPorId(id));
     }
 
     @GetMapping("/cpf/{cpf}")
-    public ResponseEntity<Paciente> obterPorCpf(@PathVariable String cpf) {
-        Optional<Paciente> paciente = pacienteService.obterPorCpf(cpf);
-        return paciente.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<PacienteResponseDTO> obterPorCpf(@PathVariable String cpf) {
+        return ResponseEntity.ok(pacienteService.obterPorCpf(cpf));
     }
 
     @GetMapping("/nome")
-    public ResponseEntity<List<Paciente>> obterPorNome(@RequestParam String nome) {
-        List<Paciente> pacientes = pacienteService.obterPorNome(nome);
-        return ResponseEntity.ok(pacientes);
+    public ResponseEntity<List<PacienteResponseDTO>> obterPorNome(@RequestParam String nome) {
+        return ResponseEntity.ok(pacienteService.obterPorNome(nome));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Paciente> atualizar(@PathVariable Long id, @RequestBody Paciente paciente) {
-        try {
-            Paciente pacienteAtualizado = pacienteService.atualizar(id, paciente);
-            return ResponseEntity.ok(pacienteAtualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<PacienteResponseDTO> atualizar(@PathVariable Long id,
+                                                          @Valid @RequestBody PacienteRequestDTO dto) {
+        return ResponseEntity.ok(pacienteService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        try {
-            pacienteService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        pacienteService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
-

@@ -1,60 +1,74 @@
 package com.JPA.SistemaHospitalar.service;
 
 import com.JPA.SistemaHospitalar.Entity.Medico;
+import com.JPA.SistemaHospitalar.dto.medico.MedicoRequestDTO;
+import com.JPA.SistemaHospitalar.dto.medico.MedicoResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.MedicoMapper;
 import com.JPA.SistemaHospitalar.repository.MedicoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MedicoService {
 
-    @Autowired
-    private MedicoRepository medicoRepository;
+    private final MedicoRepository medicoRepository;
+    private final MedicoMapper medicoMapper;
 
-    public Medico salvar(Medico medico) {
-        return medicoRepository.save(medico);
+    public MedicoService(MedicoRepository medicoRepository, MedicoMapper medicoMapper) {
+        this.medicoRepository = medicoRepository;
+        this.medicoMapper = medicoMapper;
     }
 
-    public Optional<Medico> obterPorId(Long id) {
-        return medicoRepository.findById(id);
+    public MedicoResponseDTO salvar(MedicoRequestDTO dto) {
+        Medico medico = medicoMapper.toEntity(dto);
+        return medicoMapper.toResponseDTO(medicoRepository.save(medico));
     }
 
-    public List<Medico> obterTodos() {
-        return medicoRepository.findAll();
+    public MedicoResponseDTO obterPorId(Long id) {
+        return medicoRepository.findById(id)
+                .map(medicoMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
     }
 
-    public Optional<Medico> obterPorCrm(String crm) {
-        return medicoRepository.findByCrm(crm);
+    public List<MedicoResponseDTO> obterTodos() {
+        return medicoRepository.findAll().stream()
+                .map(medicoMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Medico> obterPorNome(String nome) {
-        return medicoRepository.findByNomeContainingIgnoreCase(nome);
+    public MedicoResponseDTO obterPorCrm(String crm) {
+        return medicoRepository.findByCrm(crm)
+                .map(medicoMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com CRM: " + crm));
     }
 
-    public List<Medico> obterPorEspecialidade(String especialidade) {
-        return medicoRepository.findByEspecialidade(especialidade);
+    public List<MedicoResponseDTO> obterPorNome(String nome) {
+        return medicoRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(medicoMapper::toResponseDTO)
+                .toList();
     }
 
-    public Medico atualizar(Long id, Medico medicoAtualizado) {
-        return medicoRepository.findById(id).map(medico -> {
-            medico.setNome(medicoAtualizado.getNome());
-            medico.setEspecialidade(medicoAtualizado.getEspecialidade());
-            medico.setCrm(medicoAtualizado.getCrm());
-            return medicoRepository.save(medico);
-        }).orElseThrow(() -> new RuntimeException("Médico não encontrado com id: " + id));
+    public List<MedicoResponseDTO> obterPorEspecialidade(String especialidade) {
+        return medicoRepository.findByEspecialidade(especialidade).stream()
+                .map(medicoMapper::toResponseDTO)
+                .toList();
+    }
+
+    public MedicoResponseDTO atualizar(Long id, MedicoRequestDTO dto) {
+        Medico medico = medicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
+        medico.setNome(dto.nome());
+        medico.setEspecialidade(dto.especialidade());
+        medico.setCrm(dto.crm());
+        return medicoMapper.toResponseDTO(medicoRepository.save(medico));
     }
 
     public void deletar(Long id) {
         if (!medicoRepository.existsById(id)) {
-            throw new RuntimeException("Médico não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Médico não encontrado com id: " + id);
         }
         medicoRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return medicoRepository.existsById(id);
-    }
 }
-

@@ -1,71 +1,59 @@
 package com.JPA.SistemaHospitalar.controller;
 
-import com.JPA.SistemaHospitalar.Entity.Convenio;
+import com.JPA.SistemaHospitalar.dto.convenio.ConvenioRequestDTO;
+import com.JPA.SistemaHospitalar.dto.convenio.ConvenioResponseDTO;
 import com.JPA.SistemaHospitalar.service.ConvenioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/convenios")
 public class ConvenioController {
 
-    @Autowired
-    private ConvenioService convenioService;
+    private final ConvenioService convenioService;
+
+    public ConvenioController(ConvenioService convenioService) {
+        this.convenioService = convenioService;
+    }
 
     @PostMapping
-    public ResponseEntity<Convenio> criar(@RequestBody Convenio convenio) {
-        Convenio convenioSalvo = convenioService.salvar(convenio);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convenioSalvo);
+    public ResponseEntity<ConvenioResponseDTO> criar(@Valid @RequestBody ConvenioRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(convenioService.salvar(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Convenio>> listarTodos() {
-        List<Convenio> convenios = convenioService.obterTodos();
-        return ResponseEntity.ok(convenios);
+    public ResponseEntity<List<ConvenioResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(convenioService.obterTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Convenio> obterPorId(@PathVariable Long id) {
-        Optional<Convenio> convenio = convenioService.obterPorId(id);
-        return convenio.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ConvenioResponseDTO> obterPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(convenioService.obterPorId(id));
     }
 
     @GetMapping("/cnpj/{cnpj}")
-    public ResponseEntity<Convenio> obterPorCnpj(@PathVariable String cnpj) {
-        Optional<Convenio> convenio = convenioService.obterPorCnpj(cnpj);
-        return convenio.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ConvenioResponseDTO> obterPorCnpj(@PathVariable String cnpj) {
+        return ResponseEntity.ok(convenioService.obterPorCnpj(cnpj));
     }
 
     @GetMapping("/nome")
-    public ResponseEntity<List<Convenio>> obterPorNome(@RequestParam String nome) {
-        List<Convenio> convenios = convenioService.obterPorNome(nome);
-        return ResponseEntity.ok(convenios);
+    public ResponseEntity<List<ConvenioResponseDTO>> obterPorNome(@RequestParam String nome) {
+        return ResponseEntity.ok(convenioService.obterPorNome(nome));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Convenio> atualizar(@PathVariable Long id, @RequestBody Convenio convenio) {
-        try {
-            Convenio convenioAtualizado = convenioService.atualizar(id, convenio);
-            return ResponseEntity.ok(convenioAtualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ConvenioResponseDTO> atualizar(@PathVariable Long id,
+                                                          @Valid @RequestBody ConvenioRequestDTO dto) {
+        return ResponseEntity.ok(convenioService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        try {
-            convenioService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        convenioService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
-
