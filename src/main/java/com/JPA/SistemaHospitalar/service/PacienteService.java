@@ -1,56 +1,68 @@
 package com.JPA.SistemaHospitalar.service;
 
 import com.JPA.SistemaHospitalar.Entity.Paciente;
+import com.JPA.SistemaHospitalar.dto.paciente.PacienteRequestDTO;
+import com.JPA.SistemaHospitalar.dto.paciente.PacienteResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.PacienteMapper;
 import com.JPA.SistemaHospitalar.repository.PacienteRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PacienteService {
 
-    @Autowired
-    private PacienteRepository pacienteRepository;
+    private final PacienteRepository pacienteRepository;
+    private final PacienteMapper pacienteMapper;
 
-    public Paciente salvar(Paciente paciente) {
-        return pacienteRepository.save(paciente);
+    public PacienteService(PacienteRepository pacienteRepository, PacienteMapper pacienteMapper) {
+        this.pacienteRepository = pacienteRepository;
+        this.pacienteMapper = pacienteMapper;
     }
 
-    public Optional<Paciente> obterPorId(Long id) {
-        return pacienteRepository.findById(id);
+    public PacienteResponseDTO salvar(PacienteRequestDTO dto) {
+        Paciente paciente = pacienteMapper.toEntity(dto);
+        return pacienteMapper.toResponseDTO(pacienteRepository.save(paciente));
     }
 
-    public List<Paciente> obterTodos() {
-        return pacienteRepository.findAll();
+    public PacienteResponseDTO obterPorId(Long id) {
+        return pacienteRepository.findById(id)
+                .map(pacienteMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + id));
     }
 
-    public Optional<Paciente> obterPorCpf(String cpf) {
-        return pacienteRepository.findByCpf(cpf);
+    public List<PacienteResponseDTO> obterTodos() {
+        return pacienteRepository.findAll().stream()
+                .map(pacienteMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Paciente> obterPorNome(String nome) {
-        return pacienteRepository.findByNomeContainingIgnoreCase(nome);
+    public PacienteResponseDTO obterPorCpf(String cpf) {
+        return pacienteRepository.findByCpf(cpf)
+                .map(pacienteMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com CPF: " + cpf));
     }
 
-    public Paciente atualizar(Long id, Paciente pacienteAtualizado) {
-        return pacienteRepository.findById(id).map(paciente -> {
-            paciente.setNome(pacienteAtualizado.getNome());
-            paciente.setCpf(pacienteAtualizado.getCpf());
-            paciente.setTelefone(pacienteAtualizado.getTelefone());
-            return pacienteRepository.save(paciente);
-        }).orElseThrow(() -> new RuntimeException("Paciente não encontrado com id: " + id));
+    public List<PacienteResponseDTO> obterPorNome(String nome) {
+        return pacienteRepository.findByNomeContainingIgnoreCase(nome).stream()
+                .map(pacienteMapper::toResponseDTO)
+                .toList();
+    }
+
+    public PacienteResponseDTO atualizar(Long id, PacienteRequestDTO dto) {
+        Paciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + id));
+        paciente.setNome(dto.nome());
+        paciente.setCpf(dto.cpf());
+        paciente.setTelefone(dto.telefone());
+        return pacienteMapper.toResponseDTO(pacienteRepository.save(paciente));
     }
 
     public void deletar(Long id) {
         if (!pacienteRepository.existsById(id)) {
-            throw new RuntimeException("Paciente não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Paciente não encontrado com id: " + id);
         }
         pacienteRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return pacienteRepository.existsById(id);
-    }
 }
-

@@ -1,56 +1,56 @@
 package com.JPA.SistemaHospitalar.service;
 
 import com.JPA.SistemaHospitalar.Entity.Receita;
+import com.JPA.SistemaHospitalar.dto.receita.ReceitaRequestDTO;
+import com.JPA.SistemaHospitalar.dto.receita.ReceitaResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.ReceitaMapper;
 import com.JPA.SistemaHospitalar.repository.ReceitaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReceitaService {
 
-    @Autowired
-    private ReceitaRepository receitaRepository;
+    private final ReceitaRepository receitaRepository;
+    private final ReceitaMapper receitaMapper;
 
-    public Receita salvar(Receita receita) {
-        return receitaRepository.save(receita);
+    public ReceitaService(ReceitaRepository receitaRepository, ReceitaMapper receitaMapper) {
+        this.receitaRepository = receitaRepository;
+        this.receitaMapper = receitaMapper;
     }
 
-    public Optional<Receita> obterPorId(Long id) {
-        return receitaRepository.findById(id);
+    public ReceitaResponseDTO salvar(ReceitaRequestDTO dto) {
+        Receita receita = receitaMapper.toEntity(dto);
+        return receitaMapper.toResponseDTO(receitaRepository.save(receita));
     }
 
-    public List<Receita> obterTodos() {
-        return receitaRepository.findAll();
+    public ReceitaResponseDTO obterPorId(Long id) {
+        return receitaRepository.findById(id)
+                .map(receitaMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
     }
 
-    public List<Receita> obterPorMedicamento(String medicamento) {
-        return receitaRepository.findByMedicamento(medicamento);
+    public List<ReceitaResponseDTO> obterTodas() {
+        return receitaRepository.findAll().stream()
+                .map(receitaMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Receita> obterPorDuracaoDias(int dias) {
-        return receitaRepository.findByDuracaoDias(dias);
-    }
-
-    public Receita atualizar(Long id, Receita receitaAtualizada) {
-        return receitaRepository.findById(id).map(receita -> {
-            receita.setMedicamento(receitaAtualizada.getMedicamento());
-            receita.setDosagem(receitaAtualizada.getDosagem());
-            receita.setDuracaoDias(receitaAtualizada.getDuracaoDias());
-            return receitaRepository.save(receita);
-        }).orElseThrow(() -> new RuntimeException("Receita não encontrada com id: " + id));
+    public ReceitaResponseDTO atualizar(Long id, ReceitaRequestDTO dto) {
+        Receita receita = receitaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
+        receita.setMedicamento(dto.medicamento());
+        receita.setDosagem(dto.dosagem());
+        receita.setDuracaoDias(dto.duracaoDias());
+        return receitaMapper.toResponseDTO(receitaRepository.save(receita));
     }
 
     public void deletar(Long id) {
         if (!receitaRepository.existsById(id)) {
-            throw new RuntimeException("Receita não encontrada com id: " + id);
+            throw new ResourceNotFoundException("Receita não encontrada com id: " + id);
         }
         receitaRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return receitaRepository.existsById(id);
-    }
 }
-

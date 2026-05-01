@@ -1,73 +1,134 @@
 package com.JPA.SistemaHospitalar.service;
 
 import com.JPA.SistemaHospitalar.Entity.Consulta;
+import com.JPA.SistemaHospitalar.Entity.Convenio;
+import com.JPA.SistemaHospitalar.Entity.Medico;
+import com.JPA.SistemaHospitalar.Entity.Paciente;
+import com.JPA.SistemaHospitalar.Entity.Receita;
+import com.JPA.SistemaHospitalar.dto.consulta.ConsultaRequestDTO;
+import com.JPA.SistemaHospitalar.dto.consulta.ConsultaResponseDTO;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.mapper.ConsultaMapper;
+import com.JPA.SistemaHospitalar.mapper.ReceitaMapper;
 import com.JPA.SistemaHospitalar.repository.ConsultaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.JPA.SistemaHospitalar.repository.ConvenioRepository;
+import com.JPA.SistemaHospitalar.repository.MedicoRepository;
+import com.JPA.SistemaHospitalar.repository.PacienteRepository;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ConsultaService {
 
-    @Autowired
-    private ConsultaRepository consultaRepository;
+    private final ConsultaRepository consultaRepository;
+    private final PacienteRepository pacienteRepository;
+    private final MedicoRepository medicoRepository;
+    private final ConvenioRepository convenioRepository;
+    private final ConsultaMapper consultaMapper;
+    private final ReceitaMapper receitaMapper;
 
-    public Consulta salvar(Consulta consulta) {
-        return consultaRepository.save(consulta);
+    public ConsultaService(ConsultaRepository consultaRepository,
+                            PacienteRepository pacienteRepository,
+                            MedicoRepository medicoRepository,
+                            ConvenioRepository convenioRepository,
+                            ConsultaMapper consultaMapper,
+                            ReceitaMapper receitaMapper) {
+        this.consultaRepository = consultaRepository;
+        this.pacienteRepository = pacienteRepository;
+        this.medicoRepository = medicoRepository;
+        this.convenioRepository = convenioRepository;
+        this.consultaMapper = consultaMapper;
+        this.receitaMapper = receitaMapper;
     }
 
-    public Optional<Consulta> obterPorId(Long id) {
-        return consultaRepository.findById(id);
+    public ConsultaResponseDTO salvar(ConsultaRequestDTO dto) {
+        Paciente paciente = pacienteRepository.findById(dto.pacienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + dto.pacienteId()));
+        Medico medico = medicoRepository.findById(dto.medicoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + dto.medicoId()));
+        Convenio convenio = convenioRepository.findById(dto.convenioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + dto.convenioId()));
+
+        Consulta consulta = new Consulta(dto.dataHora(), dto.motivo(), dto.valor());
+        consulta.setPaciente(paciente);
+        consulta.setMedico(medico);
+        consulta.setConvenio(convenio);
+
+        if (dto.receita() != null) {
+            Receita receita = receitaMapper.toEntity(dto.receita());
+            consulta.setReceita(receita);
+        }
+
+        return consultaMapper.toResponseDTO(consultaRepository.save(consulta));
     }
 
-    public List<Consulta> obterTodas() {
-        return consultaRepository.findAll();
+    public ConsultaResponseDTO obterPorId(Long id) {
+        return consultaRepository.findById(id)
+                .map(consultaMapper::toResponseDTO)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada com id: " + id));
     }
 
-    public List<Consulta> obterPorPacienteId(Long pacienteId) {
-        return consultaRepository.findByPacienteId(pacienteId);
+    public List<ConsultaResponseDTO> obterTodas() {
+        return consultaRepository.findAll().stream()
+                .map(consultaMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Consulta> obterPorMedicoId(Long medicoId) {
-        return consultaRepository.findByMedicoId(medicoId);
+    public List<ConsultaResponseDTO> obterPorPacienteId(Long pacienteId) {
+        return consultaRepository.findByPacienteId(pacienteId).stream()
+                .map(consultaMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Consulta> obterPorConvenioId(Long convenioId) {
-        return consultaRepository.findByConvenioId(convenioId);
+    public List<ConsultaResponseDTO> obterPorMedicoId(Long medicoId) {
+        return consultaRepository.findByMedicoId(medicoId).stream()
+                .map(consultaMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Consulta> obterPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
-        return consultaRepository.findByDataHoraBetween(inicio, fim);
+    public List<ConsultaResponseDTO> obterPorConvenioId(Long convenioId) {
+        return consultaRepository.findByConvenioId(convenioId).stream()
+                .map(consultaMapper::toResponseDTO)
+                .toList();
     }
 
-    public List<Consulta> obterPorMotivo(String motivo) {
-        return consultaRepository.findByMotivo(motivo);
+    public List<ConsultaResponseDTO> obterPorMotivo(String motivo) {
+        return consultaRepository.findByMotivo(motivo).stream()
+                .map(consultaMapper::toResponseDTO)
+                .toList();
     }
 
-    public Consulta atualizar(Long id, Consulta consultaAtualizada) {
-        return consultaRepository.findById(id).map(consulta -> {
-            consulta.setDataHora(consultaAtualizada.getDataHora());
-            consulta.setMotivo(consultaAtualizada.getMotivo());
-            consulta.setValor(consultaAtualizada.getValor());
-            consulta.setPaciente(consultaAtualizada.getPaciente());
-            consulta.setMedico(consultaAtualizada.getMedico());
-            consulta.setConvenio(consultaAtualizada.getConvenio());
-            consulta.setReceita(consultaAtualizada.getReceita());
-            return consultaRepository.save(consulta);
-        }).orElseThrow(() -> new RuntimeException("Consulta não encontrada com id: " + id));
+    public ConsultaResponseDTO atualizar(Long id, ConsultaRequestDTO dto) {
+        Consulta consulta = consultaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada com id: " + id));
+
+        Paciente paciente = pacienteRepository.findById(dto.pacienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + dto.pacienteId()));
+        Medico medico = medicoRepository.findById(dto.medicoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + dto.medicoId()));
+        Convenio convenio = convenioRepository.findById(dto.convenioId())
+                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + dto.convenioId()));
+
+        consulta.setDataHora(dto.dataHora());
+        consulta.setMotivo(dto.motivo());
+        consulta.setValor(dto.valor());
+        consulta.setPaciente(paciente);
+        consulta.setMedico(medico);
+        consulta.setConvenio(convenio);
+
+        if (dto.receita() != null) {
+            Receita receita = receitaMapper.toEntity(dto.receita());
+            consulta.setReceita(receita);
+        }
+
+        return consultaMapper.toResponseDTO(consultaRepository.save(consulta));
     }
 
     public void deletar(Long id) {
         if (!consultaRepository.existsById(id)) {
-            throw new RuntimeException("Consulta não encontrada com id: " + id);
+            throw new ResourceNotFoundException("Consulta não encontrada com id: " + id);
         }
         consultaRepository.deleteById(id);
     }
-
-    public boolean existe(Long id) {
-        return consultaRepository.existsById(id);
-    }
 }
-

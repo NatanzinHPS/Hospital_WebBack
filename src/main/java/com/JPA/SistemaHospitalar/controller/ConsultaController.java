@@ -1,83 +1,69 @@
 package com.JPA.SistemaHospitalar.controller;
 
-import com.JPA.SistemaHospitalar.Entity.Consulta;
+import com.JPA.SistemaHospitalar.dto.consulta.ConsultaRequestDTO;
+import com.JPA.SistemaHospitalar.dto.consulta.ConsultaResponseDTO;
 import com.JPA.SistemaHospitalar.service.ConsultaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDateTime;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/consultas")
 public class ConsultaController {
 
-    @Autowired
-    private ConsultaService consultaService;
+    private final ConsultaService consultaService;
+
+    public ConsultaController(ConsultaService consultaService) {
+        this.consultaService = consultaService;
+    }
 
     @PostMapping
-    public ResponseEntity<Consulta> criar(@RequestBody Consulta consulta) {
-        Consulta consultaSalva = consultaService.salvar(consulta);
-        return ResponseEntity.status(HttpStatus.CREATED).body(consultaSalva);
+    public ResponseEntity<ConsultaResponseDTO> criar(@Valid @RequestBody ConsultaRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(consultaService.salvar(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Consulta>> listarTodas() {
-        List<Consulta> consultas = consultaService.obterTodas();
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaResponseDTO>> listarTodas() {
+        return ResponseEntity.ok(consultaService.obterTodas());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Consulta> obterPorId(@PathVariable Long id) {
-        Optional<Consulta> consulta = consultaService.obterPorId(id);
-        return consulta.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<ConsultaResponseDTO> obterPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(consultaService.obterPorId(id));
     }
 
     @GetMapping("/paciente/{pacienteId}")
-    public ResponseEntity<List<Consulta>> obterPorPaciente(@PathVariable Long pacienteId) {
-        List<Consulta> consultas = consultaService.obterPorPacienteId(pacienteId);
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaResponseDTO>> obterPorPaciente(@PathVariable Long pacienteId) {
+        return ResponseEntity.ok(consultaService.obterPorPacienteId(pacienteId));
     }
 
     @GetMapping("/medico/{medicoId}")
-    public ResponseEntity<List<Consulta>> obterPorMedico(@PathVariable Long medicoId) {
-        List<Consulta> consultas = consultaService.obterPorMedicoId(medicoId);
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaResponseDTO>> obterPorMedico(@PathVariable Long medicoId) {
+        return ResponseEntity.ok(consultaService.obterPorMedicoId(medicoId));
     }
 
     @GetMapping("/convenio/{convenioId}")
-    public ResponseEntity<List<Consulta>> obterPorConvenio(@PathVariable Long convenioId) {
-        List<Consulta> consultas = consultaService.obterPorConvenioId(convenioId);
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaResponseDTO>> obterPorConvenio(@PathVariable Long convenioId) {
+        return ResponseEntity.ok(consultaService.obterPorConvenioId(convenioId));
     }
 
     @GetMapping("/motivo")
-    public ResponseEntity<List<Consulta>> obterPorMotivo(@RequestParam String motivo) {
-        List<Consulta> consultas = consultaService.obterPorMotivo(motivo);
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaResponseDTO>> obterPorMotivo(@RequestParam String motivo) {
+        return ResponseEntity.ok(consultaService.obterPorMotivo(motivo));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Consulta> atualizar(@PathVariable Long id, @RequestBody Consulta consulta) {
-        try {
-            Consulta consultaAtualizada = consultaService.atualizar(id, consulta);
-            return ResponseEntity.ok(consultaAtualizada);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ConsultaResponseDTO> atualizar(@PathVariable Long id,
+                                                          @Valid @RequestBody ConsultaRequestDTO dto) {
+        return ResponseEntity.ok(consultaService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        try {
-            consultaService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        consultaService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
-

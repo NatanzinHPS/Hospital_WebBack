@@ -1,70 +1,51 @@
 package com.JPA.SistemaHospitalar.controller;
 
-import com.JPA.SistemaHospitalar.Entity.Prontuario;
+import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioRequestDTO;
+import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioResponseDTO;
 import com.JPA.SistemaHospitalar.service.ProntuarioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/prontuarios")
 public class ProntuarioController {
 
-    @Autowired
-    private ProntuarioService prontuarioService;
+    private final ProntuarioService prontuarioService;
 
-    @PostMapping
-    public ResponseEntity<Prontuario> criar(@RequestBody Prontuario prontuario) {
-        Prontuario prontuarioSalvo = prontuarioService.salvar(prontuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(prontuarioSalvo);
+    public ProntuarioController(ProntuarioService prontuarioService) {
+        this.prontuarioService = prontuarioService;
+    }
+
+    @PostMapping("/paciente/{pacienteId}")
+    public ResponseEntity<ProntuarioResponseDTO> criarParaPaciente(@PathVariable Long pacienteId,
+                                                                    @Valid @RequestBody ProntuarioRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(prontuarioService.salvarParaPaciente(pacienteId, dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<Prontuario>> listarTodos() {
-        List<Prontuario> prontuarios = prontuarioService.obterTodos();
-        return ResponseEntity.ok(prontuarios);
+    public ResponseEntity<List<ProntuarioResponseDTO>> listarTodos() {
+        return ResponseEntity.ok(prontuarioService.obterTodos());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Prontuario> obterPorId(@PathVariable Long id) {
-        Optional<Prontuario> prontuario = prontuarioService.obterPorId(id);
-        return prontuario.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/tipoSanguineo")
-    public ResponseEntity<List<Prontuario>> obterPorTipoSanguineo(@RequestParam String tipo) {
-        List<Prontuario> prontuarios = prontuarioService.obterPorTipoSanguineo(tipo);
-        return ResponseEntity.ok(prontuarios);
-    }
-
-    @GetMapping("/alergia")
-    public ResponseEntity<List<Prontuario>> obterPorAlergia(@RequestParam String alergia) {
-        List<Prontuario> prontuarios = prontuarioService.obterPorAlergia(alergia);
-        return ResponseEntity.ok(prontuarios);
+    public ResponseEntity<ProntuarioResponseDTO> obterPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(prontuarioService.obterPorId(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Prontuario> atualizar(@PathVariable Long id, @RequestBody Prontuario prontuario) {
-        try {
-            Prontuario prontuarioAtualizado = prontuarioService.atualizar(id, prontuario);
-            return ResponseEntity.ok(prontuarioAtualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<ProntuarioResponseDTO> atualizar(@PathVariable Long id,
+                                                            @Valid @RequestBody ProntuarioRequestDTO dto) {
+        return ResponseEntity.ok(prontuarioService.atualizar(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        try {
-            prontuarioService.deletar(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        prontuarioService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
-
