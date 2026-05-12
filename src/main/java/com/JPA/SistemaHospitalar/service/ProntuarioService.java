@@ -4,7 +4,7 @@ import com.JPA.SistemaHospitalar.Entity.Paciente;
 import com.JPA.SistemaHospitalar.Entity.Prontuario;
 import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioRequestDTO;
 import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioResponseDTO;
-import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
 import com.JPA.SistemaHospitalar.mapper.ProntuarioMapper;
 import com.JPA.SistemaHospitalar.repository.PacienteRepository;
 import com.JPA.SistemaHospitalar.repository.ProntuarioRepository;
@@ -29,7 +29,7 @@ public class ProntuarioService {
 
     public ProntuarioResponseDTO salvarParaPaciente(Long pacienteId, ProntuarioRequestDTO dto) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + pacienteId));
+                .orElseThrow(() -> new RegraNegocioException("Paciente não encontrado com id: " + pacienteId));
         Prontuario prontuario = prontuarioMapper.toEntity(dto);
         paciente.setProntuario(prontuario);
         pacienteRepository.save(paciente);
@@ -39,7 +39,7 @@ public class ProntuarioService {
     public ProntuarioResponseDTO obterPorId(Long id) {
         return prontuarioRepository.findById(id)
                 .map(prontuarioMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Prontuário não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Prontuário não encontrado com id: " + id));
     }
 
     public List<ProntuarioResponseDTO> obterTodos() {
@@ -50,7 +50,7 @@ public class ProntuarioService {
 
     public ProntuarioResponseDTO atualizar(Long id, ProntuarioRequestDTO dto) {
         Prontuario prontuario = prontuarioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Prontuário não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Prontuário não encontrado com id: " + id));
         prontuario.setTipoSanguineo(dto.tipoSanguineo());
         prontuario.setAlergia(dto.alergia());
         prontuario.setObservacoes(dto.observacoes());
@@ -59,7 +59,7 @@ public class ProntuarioService {
 
     public void deletar(Long id) {
         if (!prontuarioRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Prontuário não encontrado com id: " + id);
+            throw new RegraNegocioException("Prontuário não encontrado com id: " + id);
         }
         prontuarioRepository.deleteById(id);
     }

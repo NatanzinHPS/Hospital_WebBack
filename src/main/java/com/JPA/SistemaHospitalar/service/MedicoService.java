@@ -3,7 +3,7 @@ package com.JPA.SistemaHospitalar.service;
 import com.JPA.SistemaHospitalar.Entity.Medico;
 import com.JPA.SistemaHospitalar.dto.medico.MedicoRequestDTO;
 import com.JPA.SistemaHospitalar.dto.medico.MedicoResponseDTO;
-import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
 import com.JPA.SistemaHospitalar.mapper.MedicoMapper;
 import com.JPA.SistemaHospitalar.repository.MedicoRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class MedicoService {
     public MedicoResponseDTO obterPorId(Long id) {
         return medicoRepository.findById(id)
                 .map(medicoMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + id));
     }
 
     public List<MedicoResponseDTO> obterTodos() {
@@ -41,7 +41,7 @@ public class MedicoService {
     public MedicoResponseDTO obterPorCrm(String crm) {
         return medicoRepository.findByCrm(crm)
                 .map(medicoMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com CRM: " + crm));
+                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com CRM: " + crm));
     }
 
     public List<MedicoResponseDTO> obterPorNome(String nome) {
@@ -58,7 +58,7 @@ public class MedicoService {
 
     public MedicoResponseDTO atualizar(Long id, MedicoRequestDTO dto) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + id));
         medico.setNome(dto.nome());
         medico.setEspecialidade(dto.especialidade());
         medico.setCrm(dto.crm());
@@ -67,7 +67,7 @@ public class MedicoService {
 
     public void deletar(Long id) {
         if (!medicoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Médico não encontrado com id: " + id);
+            throw new RegraNegocioException("Médico não encontrado com id: " + id);
         }
         medicoRepository.deleteById(id);
     }

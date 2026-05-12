@@ -3,7 +3,7 @@ package com.JPA.SistemaHospitalar.service;
 import com.JPA.SistemaHospitalar.Entity.Convenio;
 import com.JPA.SistemaHospitalar.dto.convenio.ConvenioRequestDTO;
 import com.JPA.SistemaHospitalar.dto.convenio.ConvenioResponseDTO;
-import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
 import com.JPA.SistemaHospitalar.mapper.ConvenioMapper;
 import com.JPA.SistemaHospitalar.repository.ConvenioRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class ConvenioService {
     public ConvenioResponseDTO obterPorId(Long id) {
         return convenioRepository.findById(id)
                 .map(convenioMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Convênio não encontrado com id: " + id));
     }
 
     public List<ConvenioResponseDTO> obterTodos() {
@@ -41,7 +41,7 @@ public class ConvenioService {
     public ConvenioResponseDTO obterPorCnpj(String cnpj) {
         return convenioRepository.findByCnpj(cnpj)
                 .map(convenioMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com CNPJ: " + cnpj));
+                .orElseThrow(() -> new RegraNegocioException("Convênio não encontrado com CNPJ: " + cnpj));
     }
 
     public List<ConvenioResponseDTO> obterPorNome(String nome) {
@@ -52,7 +52,7 @@ public class ConvenioService {
 
     public ConvenioResponseDTO atualizar(Long id, ConvenioRequestDTO dto) {
         Convenio convenio = convenioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Convênio não encontrado com id: " + id));
         convenio.setNome(dto.nome());
         convenio.setCnpj(dto.cnpj());
         return convenioMapper.toResponseDTO(convenioRepository.save(convenio));
@@ -60,7 +60,7 @@ public class ConvenioService {
 
     public void deletar(Long id) {
         if (!convenioRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Convênio não encontrado com id: " + id);
+            throw new RegraNegocioException("Convênio não encontrado com id: " + id);
         }
         convenioRepository.deleteById(id);
     }
