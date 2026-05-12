@@ -7,7 +7,7 @@ import com.JPA.SistemaHospitalar.Entity.Paciente;
 import com.JPA.SistemaHospitalar.Entity.Receita;
 import com.JPA.SistemaHospitalar.dto.consulta.ConsultaRequestDTO;
 import com.JPA.SistemaHospitalar.dto.consulta.ConsultaResponseDTO;
-import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
 import com.JPA.SistemaHospitalar.mapper.ConsultaMapper;
 import com.JPA.SistemaHospitalar.mapper.ReceitaMapper;
 import com.JPA.SistemaHospitalar.repository.ConsultaRepository;
@@ -44,11 +44,11 @@ public class ConsultaService {
 
     public ConsultaResponseDTO salvar(ConsultaRequestDTO dto) {
         Paciente paciente = pacienteRepository.findById(dto.pacienteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + dto.pacienteId()));
+                .orElseThrow(() -> new RegraNegocioException("Paciente não encontrado com id: " + dto.pacienteId()));
         Medico medico = medicoRepository.findById(dto.medicoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + dto.medicoId()));
+                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + dto.medicoId()));
         Convenio convenio = convenioRepository.findById(dto.convenioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + dto.convenioId()));
+                .orElseThrow(() -> new RegraNegocioException("Convênio não encontrado com id: " + dto.convenioId()));
 
         Consulta consulta = new Consulta(dto.dataHora(), dto.motivo(), dto.valor());
         consulta.setPaciente(paciente);
@@ -66,7 +66,7 @@ public class ConsultaService {
     public ConsultaResponseDTO obterPorId(Long id) {
         return consultaRepository.findById(id)
                 .map(consultaMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Consulta não encontrada com id: " + id));
     }
 
     public List<ConsultaResponseDTO> obterTodas() {
@@ -101,14 +101,14 @@ public class ConsultaService {
 
     public ConsultaResponseDTO atualizar(Long id, ConsultaRequestDTO dto) {
         Consulta consulta = consultaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Consulta não encontrada com id: " + id));
 
         Paciente paciente = pacienteRepository.findById(dto.pacienteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado com id: " + dto.pacienteId()));
+                .orElseThrow(() -> new RegraNegocioException("Paciente não encontrado com id: " + dto.pacienteId()));
         Medico medico = medicoRepository.findById(dto.medicoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + dto.medicoId()));
+                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + dto.medicoId()));
         Convenio convenio = convenioRepository.findById(dto.convenioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Convênio não encontrado com id: " + dto.convenioId()));
+                .orElseThrow(() -> new RegraNegocioException("Convênio não encontrado com id: " + dto.convenioId()));
 
         consulta.setDataHora(dto.dataHora());
         consulta.setMotivo(dto.motivo());
@@ -127,7 +127,7 @@ public class ConsultaService {
 
     public void deletar(Long id) {
         if (!consultaRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Consulta não encontrada com id: " + id);
+            throw new RegraNegocioException("Consulta não encontrada com id: " + id);
         }
         consultaRepository.deleteById(id);
     }

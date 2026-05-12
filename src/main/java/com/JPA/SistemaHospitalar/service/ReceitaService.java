@@ -3,7 +3,7 @@ package com.JPA.SistemaHospitalar.service;
 import com.JPA.SistemaHospitalar.Entity.Receita;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaRequestDTO;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaResponseDTO;
-import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
+import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
 import com.JPA.SistemaHospitalar.mapper.ReceitaMapper;
 import com.JPA.SistemaHospitalar.repository.ReceitaRepository;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ public class ReceitaService {
     public ReceitaResponseDTO obterPorId(Long id) {
         return receitaRepository.findById(id)
                 .map(receitaMapper::toResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Receita não encontrada com id: " + id));
     }
 
     public List<ReceitaResponseDTO> obterTodas() {
@@ -40,7 +40,7 @@ public class ReceitaService {
 
     public ReceitaResponseDTO atualizar(Long id, ReceitaRequestDTO dto) {
         Receita receita = receitaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
+                .orElseThrow(() -> new RegraNegocioException("Receita não encontrada com id: " + id));
         receita.setMedicamento(dto.medicamento());
         receita.setDosagem(dto.dosagem());
         receita.setDuracaoDias(dto.duracaoDias());
@@ -49,7 +49,7 @@ public class ReceitaService {
 
     public void deletar(Long id) {
         if (!receitaRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Receita não encontrada com id: " + id);
+            throw new RegraNegocioException("Receita não encontrada com id: " + id);
         }
         receitaRepository.deleteById(id);
     }
