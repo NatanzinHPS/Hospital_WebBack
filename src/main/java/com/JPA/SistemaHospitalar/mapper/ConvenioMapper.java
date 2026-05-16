@@ -1,6 +1,6 @@
 package com.JPA.SistemaHospitalar.mapper;
 
-import com.JPA.SistemaHospitalar.Entity.Convenio;
+import com.JPA.SistemaHospitalar.entity.Convenio;
 import com.JPA.SistemaHospitalar.dto.convenio.ConvenioRequestDTO;
 import com.JPA.SistemaHospitalar.dto.convenio.ConvenioResponseDTO;
 import org.springframework.stereotype.Component;

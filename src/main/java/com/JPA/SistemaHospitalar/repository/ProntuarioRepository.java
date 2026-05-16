@@ -1,6 +1,6 @@
 package com.JPA.SistemaHospitalar.repository;
 
-import com.JPA.SistemaHospitalar.Entity.Prontuario;
+import com.JPA.SistemaHospitalar.entity.Prontuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

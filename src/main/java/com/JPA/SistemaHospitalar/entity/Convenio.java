@@ -1,4 +1,4 @@
-package com.JPA.SistemaHospitalar.Entity;
+package com.JPA.SistemaHospitalar.entity;
 
 import jakarta.persistence.*;
 import java.util.List;

@@ -1,6 +1,7 @@
 package com.JPA.SistemaHospitalar.dto.consulta;
 
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaRequestDTO;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -26,5 +27,6 @@ public record ConsultaRequestDTO(
         @NotNull(message = "ID do convênio é obrigatório")
         Long convenioId,
 
+        @Valid
         ReceitaRequestDTO receita
 ) {}
