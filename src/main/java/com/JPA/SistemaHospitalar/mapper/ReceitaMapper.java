@@ -1,6 +1,6 @@
 package com.JPA.SistemaHospitalar.mapper;
 
-import com.JPA.SistemaHospitalar.Entity.Receita;
+import com.JPA.SistemaHospitalar.entity.Receita;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaRequestDTO;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaResponseDTO;
 import org.springframework.stereotype.Component;

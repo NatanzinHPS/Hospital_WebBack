@@ -1,6 +1,6 @@
 package com.JPA.SistemaHospitalar.mapper;
 
-import com.JPA.SistemaHospitalar.Entity.Prontuario;
+import com.JPA.SistemaHospitalar.entity.Prontuario;
 import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioRequestDTO;
 import com.JPA.SistemaHospitalar.dto.prontuario.ProntuarioResponseDTO;
 import org.springframework.stereotype.Component;

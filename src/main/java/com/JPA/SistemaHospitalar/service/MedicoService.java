@@ -1,11 +1,13 @@
 package com.JPA.SistemaHospitalar.service;
 
-import com.JPA.SistemaHospitalar.Entity.Medico;
+import com.JPA.SistemaHospitalar.entity.Medico;
 import com.JPA.SistemaHospitalar.dto.medico.MedicoRequestDTO;
 import com.JPA.SistemaHospitalar.dto.medico.MedicoResponseDTO;
 import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
 import com.JPA.SistemaHospitalar.mapper.MedicoMapper;
 import com.JPA.SistemaHospitalar.repository.MedicoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,7 +23,11 @@ public class MedicoService {
         this.medicoMapper = medicoMapper;
     }
 
+    @Transactional
     public MedicoResponseDTO salvar(MedicoRequestDTO dto) {
+        if (medicoRepository.findByCrm(dto.crm()).isPresent()) {
+            throw new RegraNegocioException("Já existe um médico com o CRM: " + dto.crm());
+        }
         Medico medico = medicoMapper.toEntity(dto);
         return medicoMapper.toResponseDTO(medicoRepository.save(medico));
     }
@@ -29,7 +35,7 @@ public class MedicoService {
     public MedicoResponseDTO obterPorId(Long id) {
         return medicoRepository.findById(id)
                 .map(medicoMapper::toResponseDTO)
-                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
     }
 
     public List<MedicoResponseDTO> obterTodos() {
@@ -41,7 +47,7 @@ public class MedicoService {
     public MedicoResponseDTO obterPorCrm(String crm) {
         return medicoRepository.findByCrm(crm)
                 .map(medicoMapper::toResponseDTO)
-                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com CRM: " + crm));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com CRM: " + crm));
     }
 
     public List<MedicoResponseDTO> obterPorNome(String nome) {
@@ -56,18 +62,25 @@ public class MedicoService {
                 .toList();
     }
 
+    @Transactional
     public MedicoResponseDTO atualizar(Long id, MedicoRequestDTO dto) {
         Medico medico = medicoRepository.findById(id)
-                .orElseThrow(() -> new RegraNegocioException("Médico não encontrado com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado com id: " + id));
+
+        medicoRepository.findByCrm(dto.crm())
+                .filter(m -> !m.getId().equals(id))
+                .ifPresent(m -> { throw new RegraNegocioException("Já existe um médico com o CRM: " + dto.crm()); });
+
         medico.setNome(dto.nome());
         medico.setEspecialidade(dto.especialidade());
         medico.setCrm(dto.crm());
         return medicoMapper.toResponseDTO(medicoRepository.save(medico));
     }
 
+    @Transactional
     public void deletar(Long id) {
         if (!medicoRepository.existsById(id)) {
-            throw new RegraNegocioException("Médico não encontrado com id: " + id);
+            throw new ResourceNotFoundException("Médico não encontrado com id: " + id);
         }
         medicoRepository.deleteById(id);
     }

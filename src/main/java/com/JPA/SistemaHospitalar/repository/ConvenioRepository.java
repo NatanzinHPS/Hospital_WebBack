@@ -1,6 +1,6 @@
 package com.JPA.SistemaHospitalar.repository;
 
-import com.JPA.SistemaHospitalar.Entity.Convenio;
+import com.JPA.SistemaHospitalar.entity.Convenio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

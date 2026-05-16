@@ -1,11 +1,12 @@
 package com.JPA.SistemaHospitalar.service;
 
-import com.JPA.SistemaHospitalar.Entity.Receita;
+import com.JPA.SistemaHospitalar.entity.Receita;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaRequestDTO;
 import com.JPA.SistemaHospitalar.dto.receita.ReceitaResponseDTO;
-import com.JPA.SistemaHospitalar.exception.RegraNegocioException;
+import com.JPA.SistemaHospitalar.exception.ResourceNotFoundException;
 import com.JPA.SistemaHospitalar.mapper.ReceitaMapper;
 import com.JPA.SistemaHospitalar.repository.ReceitaRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ReceitaService {
         this.receitaMapper = receitaMapper;
     }
 
+    @Transactional
     public ReceitaResponseDTO salvar(ReceitaRequestDTO dto) {
         Receita receita = receitaMapper.toEntity(dto);
         return receitaMapper.toResponseDTO(receitaRepository.save(receita));
@@ -29,7 +31,7 @@ public class ReceitaService {
     public ReceitaResponseDTO obterPorId(Long id) {
         return receitaRepository.findById(id)
                 .map(receitaMapper::toResponseDTO)
-                .orElseThrow(() -> new RegraNegocioException("Receita não encontrada com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
     }
 
     public List<ReceitaResponseDTO> obterTodas() {
@@ -38,18 +40,21 @@ public class ReceitaService {
                 .toList();
     }
 
+    @Transactional
     public ReceitaResponseDTO atualizar(Long id, ReceitaRequestDTO dto) {
         Receita receita = receitaRepository.findById(id)
-                .orElseThrow(() -> new RegraNegocioException("Receita não encontrada com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Receita não encontrada com id: " + id));
+
         receita.setMedicamento(dto.medicamento());
         receita.setDosagem(dto.dosagem());
         receita.setDuracaoDias(dto.duracaoDias());
         return receitaMapper.toResponseDTO(receitaRepository.save(receita));
     }
 
+    @Transactional
     public void deletar(Long id) {
         if (!receitaRepository.existsById(id)) {
-            throw new RegraNegocioException("Receita não encontrada com id: " + id);
+            throw new ResourceNotFoundException("Receita não encontrada com id: " + id);
         }
         receitaRepository.deleteById(id);
     }
